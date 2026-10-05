@@ -20,7 +20,8 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-native": "^0.87.1",
-    "react-native-web": "^0.21.3"
+    "react-native-web": "^0.21.3",
+    "react-native-webview": "^14.0.1"
   },
   "devDependencies": {
     "@types/react": "^19.2.18",
