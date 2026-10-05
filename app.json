@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "Fluento",
+    "slug": "fluento",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "owner": "tharun135",
+    "web": {
+      "bundler": "metro"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "5b3427ab-0031-4efb-abd5-6a242885e865"
+      }
+    }
+  }
+}
