@@ -22,6 +22,8 @@ export function App() {
 
   const todayKey = getTodayKey();
 
+  const [bannerNotification, setBannerNotification] = useState(null);
+
   // Apply theme dynamically to body / root element
   useEffect(() => {
     if (user.theme === 'light') {
@@ -30,6 +32,56 @@ export function App() {
       document.body.classList.remove('theme-light');
     }
   }, [user.theme]);
+
+  // Automated background reminder checker
+  useEffect(() => {
+    let lastNotifiedMinute = '';
+
+    const checkReminders = () => {
+      const now = new Date();
+      const currentHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      
+      // Prevent firing multiple times within the same minute
+      if (lastNotifiedMinute === currentHHMM) return;
+
+      const todayLog = appData[todayKey] || {};
+      const completedCount = ['listening', 'speaking', 'writing', 'reading'].filter(
+        (key) => todayLog[key] && todayLog[key].completed
+      ).length;
+
+      const isMorningTime = user.morningReminderEnabled && user.morningReminderTime === currentHHMM;
+      const isEveningTime = user.eveningReminderEnabled && user.eveningReminderTime === currentHHMM;
+
+      if (isMorningTime) {
+        lastNotifiedMinute = currentHHMM;
+        const msg = `🎯 Good morning ${user.name}! Ready for today's English goal? (LSWR Practice)`;
+        setBannerNotification(msg);
+
+        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+          new Notification('Fluento Morning Reminder', {
+            body: msg,
+            icon: '/favicon.svg'
+          });
+        }
+      } else if (isEveningTime) {
+        lastNotifiedMinute = currentHHMM;
+        if (completedCount < 4) {
+          const msg = `🗣️ Evening Check-in: You have completed ${completedCount}/4 English tasks today! Complete remaining tasks to keep your streak!`;
+          setBannerNotification(msg);
+
+          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+            new Notification('Fluento LSWR Task Alert', {
+              body: msg,
+              icon: '/favicon.svg'
+            });
+          }
+        }
+      }
+    };
+
+    const interval = setInterval(checkReminders, 30000); // Check every 30 seconds
+    return () => clearInterval(interval);
+  }, [user, appData, todayKey]);
 
   const refreshData = () => {
     setAppData(getAppData());
@@ -57,6 +109,39 @@ export function App() {
   return (
     <div className="app-viewport-wrapper">
       <div className={`mobile-frame-container ${!user.mobileFrame ? 'is-desktop-full' : ''}`}>
+        {bannerNotification && (
+          <div
+            style={{
+              padding: '12px 16px',
+              backgroundColor: '#6366f1',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: 13,
+              fontWeight: 600,
+              boxShadow: '0 4px 12px rgba(99,102,241,0.3)',
+              zIndex: 1000,
+            }}
+          >
+            <span>{bannerNotification}</span>
+            <button
+              onClick={() => setBannerNotification(null)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#fff',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                marginLeft: 12,
+                fontSize: 16,
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {/* Top App Header */}
         <Header
           user={user}

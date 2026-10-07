@@ -9,8 +9,24 @@ export const SettingsScreen = ({ user, onUpdateUser, onResetData }) => {
   const [eveningTime, setEveningTime] = useState(user.eveningReminderTime || '20:00');
   const [eveningEnabled, setEveningEnabled] = useState(user.eveningReminderEnabled ?? true);
 
-  const [notificationMsg, setNotificationMsg] = useState(null);
-  const [savedSuccess, setSavedSuccess] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState(
+    typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default'
+  );
+
+  const requestNotificationPermission = async () => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      const perm = await Notification.requestPermission();
+      setNotificationPermission(perm);
+      if (perm === 'granted') {
+        new Notification('Fluento Notifications Enabled', {
+          body: `Hi ${name}! You will receive daily reminders at your configured times if tasks are incomplete.`,
+          icon: '/favicon.svg'
+        });
+      }
+    } else {
+      alert('Web Notifications are not supported on this browser.');
+    }
+  };
 
   const handleSaveProfile = (e) => {
     e.preventDefault();
@@ -102,9 +118,34 @@ export const SettingsScreen = ({ user, onUpdateUser, onResetData }) => {
 
       {/* Reminders & Notifications */}
       <div className="glass-card">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-          <Bell size={20} style={{ color: 'var(--writing-color)' }} />
-          <h3 style={{ fontSize: 16, fontWeight: 700 }}>Daily Practice Reminders</h3>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Bell size={20} style={{ color: 'var(--writing-color)' }} />
+            <h3 style={{ fontSize: 16, fontWeight: 700 }}>Daily Practice Reminders</h3>
+          </div>
+          {notificationPermission !== 'granted' && (
+            <button
+              type="button"
+              onClick={requestNotificationPermission}
+              style={{
+                padding: '6px 12px',
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 700,
+                background: 'var(--writing-color)',
+                color: '#fff',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              🔔 Enable Web Notifications
+            </button>
+          )}
+          {notificationPermission === 'granted' && (
+            <span style={{ fontSize: 12, color: '#10b981', fontWeight: 700 }}>
+              ✓ Web Notifications Active
+            </span>
+          )}
         </div>
 
         {notificationMsg && (
